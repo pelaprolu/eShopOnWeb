@@ -1,31 +1,36 @@
 jobs:
-  build: # Renaming this to buildandtest is a better practice
+  buildandtest:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v5
       - name: Setup .NET
-        # ... (other setup steps) ...
-
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "8.0.x"
+          dotnet-quality: "preview" # Note: This might cause issues if "8.0.x" is not a preview version
+          
       - name: Build with dotnet
         run: dotnet build ./eShopOnWeb.sln --configuration Release
 
       - name: Test with dotnet
         run: dotnet test ./eShopOnWeb.sln --configuration Release
         
-      # === INSERT THESE STEPS ===
-      
       # 1. Package the web application
       - name: dotnet publish and zip for artifact
         run: |
+          # Publish the Web project to a local folder
           dotnet publish ./src/Web/Web.csproj -c Release -o ./app-output
+          
+          # Zip the contents of the published output folder
           zip -r web.zip ./app-output
-
+          
+          # Check for the file (Good practice)
+          ls -l web.zip
+          
       # 2. Upload the artifact
       - name: Upload .net-app Artifact
         uses: actions/upload-artifact@v5
         with:
-          name: .net-app-package
-          path: web.zip 
-          
-     
+          name: .net-app-package # This is the name the deploy job will download
+          path: web.zip
