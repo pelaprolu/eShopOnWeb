@@ -1,22 +1,31 @@
-name: eShopOnWeb Build and Test
-
-#Triggers (uncomment line below to use it)
-on: [push, pull_request, workflow_dispatch]
-
 jobs:
-  build:
+  build: # Renaming this to buildandtest is a better practice
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v5
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: "8.0.x"
-          dotnet-quality: "preview"
+        # ... (other setup steps) ...
 
       - name: Build with dotnet
         run: dotnet build ./eShopOnWeb.sln --configuration Release
 
       - name: Test with dotnet
         run: dotnet test ./eShopOnWeb.sln --configuration Release
+        
+      # === INSERT THESE STEPS ===
+      
+      # 1. Package the web application
+      - name: dotnet publish and zip for artifact
+        run: |
+          dotnet publish ./src/Web/Web.csproj -c Release -o ./app-output
+          zip -r web.zip ./app-output
+
+      # 2. Upload the artifact
+      - name: Upload .net-app Artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: .net-app-package
+          path: web.zip 
+          
+      # ==========================
