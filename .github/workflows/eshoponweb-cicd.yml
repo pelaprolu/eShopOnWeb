@@ -31,26 +31,26 @@ jobs:
         run: dotnet test ./eShopOnWeb.sln --configuration Release
       - name: dotnet publish
         run: |
-          dotnet publish ./src/Web/Web.csproj -c Release -o ${{env.DOTNET_ROOT}}/myapp
-          cd ${{env.DOTNET_ROOT}}/myapp
-          zip -r ../app.zip .
+         dotnet publish ./src/Web/Web.csproj -c Release -o ./publish_output
+         zip -r deployment_package.zip ./publish_output
+     
       # CHECK 1: Verify Application Zip Exists
       - name: CHECK 1: Verify Application Zip Exists
         run: ls -l ${{env.DOTNET_ROOT}}/app.zip
         
       # upload the published website code artifacts
-      - name: Upload artifact for deployment job
+      - name: Upload Artifact: .net-app
         uses: actions/upload-artifact@v5
         with:
           name: .net-app
-          path: ${{env.DOTNET_ROOT}}/app.zip
+          path: deployment_package.zip # NEW SIMPLIFIED PATH
           
       # CHECK 2: Verify Bicep Template Exists
       - name: CHECK 2: Verify Bicep Template Exists
         run: ls -l ${{ env.TEMPLATE-FILE }}
 
       # upload the bicep template as artifacts for next job
-      - name: Upload artifact for deployment job
+     - name: Upload Artifact: bicep-template
         uses: actions/upload-artifact@v5
         with:
           name: bicep-template
