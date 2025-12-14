@@ -29,34 +29,32 @@ jobs:
         run: dotnet build ./eShopOnWeb.sln --configuration Release
       - name: Test with dotnet
         run: dotnet test ./eShopOnWeb.sln --configuration Release
-      - name: dotnet publish
+      
+      # 1. Create the Zipped Artifact
+      - name: Create Web App Deployment Zip
         run: |
-         dotnet publish ./src/Web/Web.csproj -c Release -o web-app-deploy/app
-         cd web-app-deploy/app
-         zip -r ../app.zip .
-         cp ${{ env.TEMPLATE-FILE }} ../${{ env.TEMPLATE-FILE }}
-     
-      # CHECK 1: Verify Application Zip Exists
-      - name: CHECK 1: Verify Application Zip Exists
-        run: ls -l ${{env.DOTNET_ROOT}}/app.zip
-        
-      # upload the published website code artifacts
-      - name: Upload Artifact: .net-app
+          # Publish the project to a local folder named 'app-output'
+          dotnet publish ./src/Web/Web.csproj -c Release -o ./app-output
+          
+          # Zip the contents of 'app-output' directly into a file named 'web.zip'
+          zip -r web.zip ./app-output
+          
+          # Verify the zip file was created. Failure here will stop the workflow.
+          ls -l web.zip
+          
+      # 2. Upload Artifact: .net-app
+      - name: Upload .net-app Artifact
         uses: actions/upload-artifact@v5
         with:
           name: .net-app
-          path: web-app-deploy/app.zip
-          
-      # CHECK 2: Verify Bicep Template Exists
-      - name: CHECK 2: Verify Bicep Template Exists
-        run: ls -l ${{ env.TEMPLATE-FILE }}
+          path: web.zip 
 
-      # upload the bicep template as artifacts for next job
-     - name: Upload Artifact: bicep-template
+      # 3. Upload Artifact: bicep-template
+      - name: Upload bicep-template Artifact
         uses: actions/upload-artifact@v5
         with:
           name: bicep-template
-          path: web-app-deploy/${{ env.TEMPLATE-FILE }}
+          path: ${{ env.TEMPLATE-FILE }} 
 
   # Use Bicep to deploy infrastructure + Publish webapp
   deploy:
